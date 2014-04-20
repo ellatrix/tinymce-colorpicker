@@ -46,12 +46,12 @@ function tinymce_cp__wp_enqueue_editor( $args ) {
 
 }
 
-add_filter('mce_buttons_2', 'tinymce_cp__mce_buttons_2');
-
-function tinymce_cp__mce_buttons_2( $buttons ) {
-
-	$buttons[] = 'backcolor';
-
-	return $buttons;
-
-}
+//add_filter('mce_buttons_2', 'tinymce_cp__mce_buttons_2');
+//
+//function tinymce_cp__mce_buttons_2( $buttons ) {
+//
+//	$buttons[] = 'backcolor';
+//
+//	return $buttons;
+//
+//}
