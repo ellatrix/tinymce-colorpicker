@@ -1,0 +1,32 @@
+.wp-picker-container input[type="text"].wp-color-picker {
+	line-height: 22px;
+}
+
+.wp-picker-container {
+	padding-top: 10px;
+}
+
+.wp-picker-input-wrap {
+	margin: 0 10px;
+}
+
+.wp-color-result {
+	display: none;
+}
+
+.wp-color-picker,
+.wp-picker-clear {
+	display: inline!important;
+}
+
+.iris-picker {
+	position: relative; display: block!important;
+}
+
+.iris-picker-inner {
+	position: absolute;
+}
+
+.iris-palette-container {
+	position: absolute;
+}
