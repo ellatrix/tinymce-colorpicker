@@ -41,17 +41,28 @@ function tinymce_cp__wp_enqueue_editor( $args ) {
 		wp_enqueue_style( 'wp-color-picker' );
 		wp_enqueue_style( 'tinymce-colorpicker', plugin_dir_url( __FILE__ ) . '/tinymce-colorpicker.css' );
 		wp_enqueue_script( 'wp-color-picker' );
+		wp_localize_script( 'wp-color-picker', 'wpColorPicker', array( 'customColors' => get_option( 'tinymce_cp__colors' ) ) );
 
 	}
 
 }
 
-//add_filter('mce_buttons_2', 'tinymce_cp__mce_buttons_2');
-//
-//function tinymce_cp__mce_buttons_2( $buttons ) {
-//
-//	$buttons[] = 'backcolor';
-//
-//	return $buttons;
-//
-//}
+add_filter('mce_buttons_2', 'tinymce_cp__mce_buttons_2');
+
+function tinymce_cp__mce_buttons_2( $buttons ) {
+
+	$buttons[] = 'backcolor';
+
+	return $buttons;
+
+}
+
+add_action( 'wp_ajax_tinymce_cp__update_option', 'tinymce_cp__update_option' );
+
+function tinymce_cp__update_option() {
+
+	update_option( $_POST['option'], $_POST['value'] );
+
+	die;
+
+}
