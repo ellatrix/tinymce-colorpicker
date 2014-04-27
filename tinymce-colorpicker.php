@@ -6,7 +6,7 @@ Plugin URI: http://wordpress.org/plugins/tinymce-colorpicker/
 Description: A colorpicker for the TinyMCE editor.
 Author: avryl
 Author URI: http://profiles.wordpress.org/avryl/
-Version: 1.0
+Version: 1.1
 Text Domain: tinymce-colorpicker
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
