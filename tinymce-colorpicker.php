@@ -33,7 +33,7 @@ function tinymce_cp__wp_enqueue_editor( $args ) {
 
 		$settings = array(
 			'customColors' => get_option( 'tinymce_cp__colors', array() ),
-			'nonce' => current_user_can( 'edit_others_posts' ) ? wp_create_nonce( 'tinymce_cp_save_colors' ) : ''
+			'nonce' => current_user_can( 'edit_others_posts' ) ? wp_create_nonce( 'tinymce_cp_save_colors' ) : false
 		);
 
 		if ( ! is_admin() ) {

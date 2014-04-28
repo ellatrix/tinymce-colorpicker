@@ -35,11 +35,13 @@
 .wp-picker-input-wrap {
 	position: absolute;
 	z-index: 1;
+	display: none;
 }
 
 .iris-picker-inner {
 	position: absolute;
 	top: 35px!important;
+	display: none;
 }
 
 .iris-palette-container {
@@ -79,16 +81,12 @@
 	padding: 10px;
 }
 
-.wp-core-ui .tinymce-cp-custom-color-back,
-.wp-core-ui .tinymce-cp-custom-color,
-.wp-core-ui .tinymce-cp-custom-background-color-back,
-.wp-core-ui .tinymce-cp-custom-background-color {
+.wp-core-ui .tinymce-cp-custom {
 	display: block;
 	float: left;
 }
 
-.wp-core-ui .tinymce-cp-custom-color,
-.wp-core-ui .tinymce-cp-custom-background-color {
+.wp-core-ui .tinymce-cp-apply {
 	float: right;
 }
 

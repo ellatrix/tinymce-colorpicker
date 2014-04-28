@@ -31,14 +31,19 @@ tinymce.PluginManager.add( 'wptextcolor', function( editor ) {
 		return palette;
 	}
 
-	function setActiveColor( property ) {
-		var color = editor.dom.toHex( editor.dom.getStyle( editor.selection.getNode(), property ) ),
-			colors = $( '.tinymce-cp-body-' + property + ' .iris-palette' ).removeClass( 'active' );
-		if ( color ) {
+	function setActiveColor( property, color, recalc ) {
+		var colors = $( '.tinymce-cp-body-' + property + ' .iris-palette' ).removeClass( 'active' );
+		color = color || editor.dom.toHex( editor.dom.getStyle( editor.selection.getNode(), property ) );
+
+		if ( recalc ) {
 			colors.each( function() {
-				$( this ).addClass( property + '-' + editor.dom.toHex( $( this ).css( 'background-color' ) ).slice( 1, 7 ) );
+				var hex = editor.dom.toHex( $( this ).css( 'background-color' ) );
+				$( this ).addClass( property + '-' + hex.slice( 1, 7 ) ).data( 'color', hex );
 			} );
-			colors.filter( '.' + property + '-' + color.slice( 1, 7 ) ).addClass( 'active' );
+		}
+
+		if ( color ) {
+			colors.filter( '.' + property + '-' + color.slice( 1, 7 ) ).first().addClass( 'active' );
 		}
 	}
 
@@ -52,92 +57,121 @@ tinymce.PluginManager.add( 'wptextcolor', function( editor ) {
 				role: 'application',
 				ariaRemember: true,
 				html: function() {
-					return '<div class="tinymce-cp-body-' + property + '">' +
-						'<input type="text" value="#8224e3" class="tinymce-cp-' + property + '-value" />' +
+					return '' +
+						'<div class="tinymce-cp-body-' + property + '">' +
+							'<input type="text" value="#8224e3" class="tinymce-cp-value">' +
 						'</div>' +
 						'<div class="tinymce-cp-footer">' +
-							'<button class="button tinymce-cp-custom-' + property + '-back" style="display: none;">Back</button>' +
-							'<button class="button tinymce-cp-custom-' + property + '">Add custom color</button>' +
+							( settings.nonce ? '<button class="button tinymce-cp-custom">Add a color</button>' : '' ) +
+							'<button class="button button-primary tinymce-cp-apply">Apply</button>' +
 							'<div class="clear"></div>' +
 						'</div>';
 				},
 				onPostRender: function() {
-					var button = this.parent(),
+					var paletteContainer, picker,
+						button = this.parent(),
 						chosenColor = false,
-						chosingColor = false;
+						chosingColor = false,
+						panel = $( this.getEl() ),
+						applyButton = panel.find( '.tinymce-cp-apply' ).prop( 'disabled', true ),
+						customButton = panel.find( '.tinymce-cp-custom' );
 
-					$( '.tinymce-cp-' + property + '-value' ).wpColorPicker( {
+					function togglePanel() {
+						chosenColor = false;
+						chosingColor = ! chosingColor;
+
+						if ( ! paletteContainer || ! picker ) {
+							paletteContainer = panel.find( '.iris-palette-container' );
+							picker = panel.find( '.iris-picker-inner, .wp-picker-input-wrap' );
+						}
+
+						paletteContainer.add( picker ).toggle();
+						customButton.text( chosingColor ? 'Back' : 'Add a color' );
+						applyButton.prop( 'disabled', true );
+					}
+
+					panel.find( '.tinymce-cp-value' ).wpColorPicker( {
 						hide: false,
 						palettes: colorPalette(),
 						change: function( event, ui ) {
 							var color = ui.color.toString();
+
 							if ( ! chosingColor ) {
-								button.color( color );
-								if ( editor.dom.toHex( editor.dom.getStyle( editor.selection.getNode(), property ) ) !== color ) {
-									editor.execCommand( command, false, color );
-								}
-								button.hidePanel();
+								setActiveColor( property, color, false );
 							} else {
 								chosenColor = color;
-								$( '.tinymce-cp-custom-' + property ).prop( 'disabled', false ).addClass( 'button-primary' );
 							}
+
+							applyButton.prop( 'disabled', false );
 						},
 						clear: function() {
-							if ( editor.dom.toHex( editor.dom.getStyle( editor.selection.getNode(), property ) ) ) {
-								button.color( button.color() );
-								editor.execCommand( command, false, button.color() );
-							}
-							button.hidePanel();
+							chosenColor = '';
 						}
 					} );
 
-					$( '.tinymce-cp-custom-' + property + ', .tinymce-cp-custom-' + property + '-back' ).on( 'click', function( event ) {
-						var selected, index, save,
+					customButton.on( 'click', function() {
+						togglePanel();
+					} );
+
+					applyButton.on( 'click', function( event ) {
+						var color, customPalette, index, save, palette,
 							ajaxurl = window.ajaxurl || settings.ajaxurl;
 
-						if ( chosingColor && chosenColor && $( event.target ).hasClass( 'tinymce-cp-custom-' + property ) ) {
-							selected = $( this ).closest( '.mce-floatpanel' ).find( '.iris-palette-container a' ).slice( 79 );
+						if ( ! paletteContainer ) {
+							paletteContainer = panel.find( '.iris-palette-container' );
+						}
 
-							$.each( selected, function( i, element ) {
+						palette = paletteContainer.find( 'a' );
+
+						if ( chosingColor && chosenColor ) {
+							color = chosenColor;
+
+							customPalette = palette.slice( 79 );
+
+							$.each( customPalette, function( i, element ) {
 								if ( $( element ).hasClass( 'active' ) ) {
 									index = i;
 									return false;
 								}
-							});
+							} );
 
 							if ( index ) {
 								customColors.splice( index - 1, 1, chosenColor );
 								save = true;
 							} else if ( customColors.length < 20 ) {
-								// Don't save more than 20
 								customColors.push( chosenColor );
 								save = true;
 							}
 
-							if ( save && ajaxurl && settings.nonce ) {
+							if (  save && ajaxurl && settings.nonce ) {
 								$.post( ajaxurl, {
 									action: 'tinymce_cp__update_option',
 									tinymce_cp_nonce: settings.nonce,
 									tinymce_cp_colors: customColors
-								});
+								} );
 							}
 
-							$( '.tinymce-cp-color-value, .tinymce-cp-background-color-value' ).iris( 'option', 'palettes', colorPalette() );
-							button.color( chosenColor );
-							editor.execCommand( command, false, chosenColor );
-							button.hidePanel();
+							$( '.tinymce-cp-value' ).iris( 'option', 'palettes', colorPalette() );
+
+							togglePanel();
+						} else {
+							$.each( palette, function( i, element ) {
+								if ( $( element ).hasClass( 'active' ) ) {
+									color = $( element ).data( 'color' );
+									return false;
+								}
+							} );
 						}
 
-						chosenColor = false;
-						chosingColor = ! chosingColor;
-						$( '.tinymce-cp-body-' + property + ' .iris-palette-container, .tinymce-cp-body-' + property + ' .iris-picker-inner, .tinymce-cp-body-' + property + ' .wp-picker-input-wrap, .tinymce-cp-custom-' + property + '-back' ).toggle();
-						$( '.tinymce-cp-custom-' + property ).prop( 'disabled', chosingColor ).removeClass( 'button-primary' );
+						if ( editor.dom.toHex( editor.dom.getStyle( editor.selection.getNode(), property ) ) !== color ) {
+							editor.execCommand( command, false, color );
+						}
+
+						button.color( color );
+						button.hidePanel();
 					} );
 
-					$( '.tinymce-cp-body-' + property + ' .iris-picker-inner' ).hide();
-					$( '.tinymce-cp-body-' + property + ' .wp-picker-input-wrap' ).hide();
-
-					setActiveColor( property );
+					setActiveColor( property, false, true );
 				}
 			},
 			onclick: function() {
@@ -145,13 +179,14 @@ tinymce.PluginManager.add( 'wptextcolor', function( editor ) {
 			},
 			onPostRender: function() {
 				var button = this;
-				editor.on( 'click', function( event ) {
-					var color = editor.dom.toHex( editor.dom.getStyle( event.target, property ) );
+
+				editor.on( 'click keyup', function() {
+					var color = editor.dom.toHex( editor.dom.getStyle( editor.selection.getNode(), property ) );
 					color && button.color( color );
 				} );
 
 				$( '.mce-colorbutton .mce-open' ).on( 'click', function() {
-					setActiveColor( property );
+					setActiveColor( property, false, true );
 				} );
 			}
 		} );
