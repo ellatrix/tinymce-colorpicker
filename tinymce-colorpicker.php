@@ -22,7 +22,8 @@ function tinymce_cp__mce_external_plugins( $plugins ) {
 
 }
 
-add_action( 'tiny_mce_plugins', 'tinymce_cp__tiny_mce_plugins' );
+// Better not? If no jQuery or other error, the default color palette will show.
+//add_action( 'tiny_mce_plugins', 'tinymce_cp__tiny_mce_plugins' );
 
 function tinymce_cp__tiny_mce_plugins( $plugins ) {
 
@@ -38,31 +39,54 @@ function tinymce_cp__wp_enqueue_editor( $args ) {
 
 	if ( ! empty( $args['tinymce'] ) ) {
 
-		wp_enqueue_style( 'wp-color-picker' );
-		wp_enqueue_style( 'tinymce-colorpicker', plugin_dir_url( __FILE__ ) . '/tinymce-colorpicker.css' );
+		wp_enqueue_style( 'tinymce-colorpicker', plugin_dir_url( __FILE__ ) . '/tinymce-colorpicker.css', array( 'wp-color-picker' ) );
 		wp_enqueue_script( 'wp-color-picker' );
-		wp_localize_script( 'wp-color-picker', 'wpColorPicker', array( 'customColors' => get_option( 'tinymce_cp__colors' ) ) );
 
+		$settings = array(
+			'customColors' => get_option( 'tinymce_cp__colors', array() ),
+			'nonce' => current_user_can('edit_others_posts') ? wp_create_nonce( 'tinymce_cp_save_colors' ) : '',
+		);
+
+		if ( ! is_admin() ) {
+			$settings['ajaxurl'] = admin_url( 'admin-ajax.php', 'relative' );
+		}
+
+		wp_localize_script( 'wp-color-picker', 'tinymceCPSettings', $settings );
 	}
-
 }
 
 add_filter('mce_buttons_2', 'tinymce_cp__mce_buttons_2');
 
 function tinymce_cp__mce_buttons_2( $buttons ) {
 
-	$buttons[] = 'backcolor';
+	if ( ( $key = array_search( 'forecolor', $buttons ) ) !== false ) {
+		array_splice( $buttons, $key + 1, 0, 'backcolor' );
+	} else {
+		array_push( $buttons, 'forecolor', 'backcolor' );
+	}
 
 	return $buttons;
-
 }
 
 add_action( 'wp_ajax_tinymce_cp__update_option', 'tinymce_cp__update_option' );
 
 function tinymce_cp__update_option() {
+	// current_user_can('edit_others_posts') = admins and editors only?
+	if ( ! current_user_can('edit_others_posts') || ! wp_verify_nonce( $_POST['tinymce_cp_nonce'], 'tinymce_cp_save_colors' )  ) {
+		die;
+	}
 
-	update_option( $_POST['option'], $_POST['value'] );
+	if ( ! empty( $_POST['tinymce_cp_colors'] ) && is_array( $_POST['tinymce_cp_colors'] ) ) {
+		$colors = array();
+
+		foreach ( $_POST['tinymce_cp_colors'] as $color ) {
+			if ( preg_match( '/^#[0-9a-f]{3,6}$/', $color ) ) {
+				$colors[] = $color;
+			}
+		}
+
+		update_option( 'tinymce_cp__colors', $colors );
+	}
 
 	die;
-
 }

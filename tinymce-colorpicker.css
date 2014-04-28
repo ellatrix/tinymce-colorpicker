@@ -55,6 +55,7 @@
 	border-radius: 0!important;
 	box-shadow: none!important;
 	position: relative;
+	background-color: #eee;
 }
 
 .iris-palette:focus {
