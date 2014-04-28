@@ -1,9 +1,9 @@
 <?php
 
 /*
-Plugin Name: TinyMCE Colorpicker
+Plugin Name: TinyMCE Color Picker
 Plugin URI: http://wordpress.org/plugins/tinymce-colorpicker/
-Description: A colorpicker for the TinyMCE editor.
+Description: A color picker for the TinyMCE editor.
 Author: avryl
 Author URI: http://profiles.wordpress.org/avryl/
 Version: 1.1
@@ -22,17 +22,6 @@ function tinymce_cp__mce_external_plugins( $plugins ) {
 
 }
 
-// Better not? If no jQuery or other error, the default color palette will show.
-//add_action( 'tiny_mce_plugins', 'tinymce_cp__tiny_mce_plugins' );
-
-function tinymce_cp__tiny_mce_plugins( $plugins ) {
-
-	unset( $plugins['textcolor'] );
-
-	return $plugins;
-
-}
-
 add_action( 'wp_enqueue_editor', 'tinymce_cp__wp_enqueue_editor' );
 
 function tinymce_cp__wp_enqueue_editor( $args ) {
@@ -44,7 +33,7 @@ function tinymce_cp__wp_enqueue_editor( $args ) {
 
 		$settings = array(
 			'customColors' => get_option( 'tinymce_cp__colors', array() ),
-			'nonce' => current_user_can('edit_others_posts') ? wp_create_nonce( 'tinymce_cp_save_colors' ) : '',
+			'nonce' => current_user_can( 'edit_others_posts' ) ? wp_create_nonce( 'tinymce_cp_save_colors' ) : ''
 		);
 
 		if ( ! is_admin() ) {
@@ -52,10 +41,11 @@ function tinymce_cp__wp_enqueue_editor( $args ) {
 		}
 
 		wp_localize_script( 'wp-color-picker', 'tinymceCPSettings', $settings );
+
 	}
 }
 
-add_filter('mce_buttons_2', 'tinymce_cp__mce_buttons_2');
+add_filter( 'mce_buttons_2', 'tinymce_cp__mce_buttons_2' );
 
 function tinymce_cp__mce_buttons_2( $buttons ) {
 
@@ -66,17 +56,18 @@ function tinymce_cp__mce_buttons_2( $buttons ) {
 	}
 
 	return $buttons;
+
 }
 
 add_action( 'wp_ajax_tinymce_cp__update_option', 'tinymce_cp__update_option' );
 
 function tinymce_cp__update_option() {
-	// current_user_can('edit_others_posts') = admins and editors only?
-	if ( ! current_user_can('edit_others_posts') || ! wp_verify_nonce( $_POST['tinymce_cp_nonce'], 'tinymce_cp_save_colors' )  ) {
-		die;
-	}
 
-	if ( ! empty( $_POST['tinymce_cp_colors'] ) && is_array( $_POST['tinymce_cp_colors'] ) ) {
+	if ( current_user_can( 'edit_others_posts' ) &&
+			wp_verify_nonce( $_POST['tinymce_cp_nonce'], 'tinymce_cp_save_colors' ) &&
+			! empty( $_POST['tinymce_cp_colors'] ) &&
+			is_array( $_POST['tinymce_cp_colors'] ) ) {
+
 		$colors = array();
 
 		foreach ( $_POST['tinymce_cp_colors'] as $color ) {
@@ -86,7 +77,9 @@ function tinymce_cp__update_option() {
 		}
 
 		update_option( 'tinymce_cp__colors', $colors );
+
 	}
 
 	die;
+
 }
