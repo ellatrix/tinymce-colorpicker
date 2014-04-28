@@ -1,6 +1,6 @@
 === TinyMCE Color Picker ===
 
-Contributors: avryl
+Contributors: avryl, azaozz
 Requires at least: 3.9
 Tags: TinyMCE, color picker
 Tested up to: 3.9

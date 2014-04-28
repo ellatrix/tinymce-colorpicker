@@ -143,7 +143,7 @@ tinymce.PluginManager.add( 'wptextcolor', function( editor ) {
 								save = true;
 							}
 
-							if (  save && ajaxurl && settings.nonce ) {
+							if ( save && ajaxurl && settings.nonce ) {
 								$.post( ajaxurl, {
 									action: 'tinymce_cp__update_option',
 									tinymce_cp_nonce: settings.nonce,
