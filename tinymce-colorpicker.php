@@ -28,21 +28,26 @@ function tinymce_cp__wp_enqueue_editor( $args ) {
 
 	if ( ! empty( $args['tinymce'] ) ) {
 
-		wp_enqueue_style( 'tinymce-colorpicker', plugin_dir_url( __FILE__ ) . '/tinymce-colorpicker.css', array( 'wp-color-picker' ) );
+		wp_enqueue_style( 'tinymce-colorpicker', plugin_dir_url( __FILE__ ) . 'tinymce-colorpicker.css' );
 		wp_enqueue_script( 'wp-color-picker' );
 
-		$settings = array(
-			'customColors' => get_option( 'tinymce_cp__colors', array() ),
-			'nonce' => current_user_can( 'edit_others_posts' ) ? wp_create_nonce( 'tinymce_cp_save_colors' ) : false
-		);
-
-		if ( ! is_admin() ) {
-			$settings['ajaxurl'] = admin_url( 'admin-ajax.php', 'relative' );
-		}
-
-		wp_localize_script( 'wp-color-picker', 'tinymceCPSettings', $settings );
-
 	}
+}
+
+add_filter( 'tiny_mce_before_init', 'tinymce_cp__tiny_mce_before_init' );
+
+function tinymce_cp__tiny_mce_before_init( $init ) {
+
+	$settings = array(
+		'customColors' => get_option( 'tinymce_cp__colors', array() ),
+		'nonce' => current_user_can( 'edit_others_posts' ) ? wp_create_nonce( 'tinymce_cp_save_colors' ) : false,
+		'ajaxurl' => admin_url( 'admin-ajax.php', 'relative' )
+	);
+
+	$init['tinyMCEColorPicker'] = json_encode( $settings );
+
+	return $init;
+
 }
 
 add_filter( 'mce_buttons_2', 'tinymce_cp__mce_buttons_2' );
